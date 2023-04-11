@@ -1,7 +1,7 @@
 #define CMDLENGTH 45
 #define DELIMITER " | "
-#define CLICKABLE_BLOCKS
-#define LEADING_DELIMITER
+#define CLICKABLE_BLOCKS 1
+#define LEADING_DELIMITER 1
 
 const Block blocks[] = {
 	BLOCK("cpubars",  2,   1),
