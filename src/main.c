@@ -1,5 +1,6 @@
 #include "main.h"
 
+#include <errno.h>
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -38,10 +39,10 @@ static int deinit_blocks(block *const blocks,
 
 static int execute_blocks(block *const blocks,
                           const unsigned short block_count,
-                          const unsigned int time) {
+                          const timer *const timer) {
     for (unsigned short i = 0; i < block_count; ++i) {
         block *const block = &blocks[i];
-        if (!block_must_run(block, time)) {
+        if (!timer_must_run_block(timer, block)) {
             continue;
         }
 
@@ -55,7 +56,7 @@ static int execute_blocks(block *const blocks,
 
 static int trigger_event(block *const blocks, const unsigned short block_count,
                          timer *const timer) {
-    if (execute_blocks(blocks, block_count, timer->time) != 0) {
+    if (execute_blocks(blocks, block_count, timer) != 0) {
         return 1;
     }
 
@@ -68,7 +69,7 @@ static int trigger_event(block *const blocks, const unsigned short block_count,
 
 static int refresh_callback(block *const blocks,
                             const unsigned short block_count) {
-    if (execute_blocks(blocks, block_count, 0) != 0) {
+    if (execute_blocks(blocks, block_count, NULL) != 0) {
         return 1;
     }
 
@@ -86,46 +87,30 @@ static int event_loop(block *const blocks, const unsigned short block_count,
         return 1;
     }
 
-    watcher watcher = watcher_new(blocks, block_count);
-    if (watcher_init(&watcher, signal_handler->fd) != 0) {
+    watcher watcher;
+    if (watcher_init(&watcher, blocks, block_count, signal_handler->fd) != 0) {
         return 1;
     }
 
     status status = status_new(blocks, block_count);
     bool is_alive = true;
     while (is_alive) {
-        const int event_count = watcher_poll(&watcher, -1);
-        if (event_count == -1) {
+        if (watcher_poll(&watcher, -1) != 0) {
             return 1;
         }
 
-        int i = 0;
-        for (unsigned short j = 0; j < WATCHER_FD_COUNT; ++j) {
-            if (i == event_count) {
-                break;
-            }
+        if (watcher.got_signal) {
+            is_alive = signal_handler_process(signal_handler, &timer) == 0;
+        }
 
-            const watcher_fd *const watcher_fd = &watcher.fds[j];
-            if (!watcher_fd_is_readable(watcher_fd)) {
-                continue;
-            }
-
-            ++i;
-
-            if (j == SIGNAL_FD) {
-                is_alive = signal_handler_process(signal_handler, &timer) == 0;
-                continue;
-            }
-
-            block *const block = &blocks[j];
-            (void)block_update(block);
+        for (unsigned short i = 0; i < watcher.active_block_count; ++i) {
+            (void)block_update(&blocks[watcher.active_blocks[i]]);
         }
 
         const bool has_status_changed = status_update(&status);
-        if (has_status_changed) {
-            if (status_write(&status, is_debug_mode, connection) != 0) {
-                return 1;
-            }
+        if (has_status_changed &&
+            status_write(&status, is_debug_mode, connection) != 0) {
+            return 1;
         }
     }
 
@@ -133,8 +118,8 @@ static int event_loop(block *const blocks, const unsigned short block_count,
 }
 
 int main(const int argc, const char *const argv[]) {
-    cli_arguments cli_args;
-    if (cli_init(&cli_args, argv, argc) != 0) {
+    const cli_arguments cli_args = cli_parse_arguments(argv, argc);
+    if (errno != 0) {
         return 1;
     }
 

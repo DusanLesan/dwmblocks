@@ -5,6 +5,7 @@ BUILD_DIR := build
 SRC_DIR := src
 INC_DIR := include
 
+DEBUG := 0
 VERBOSE := 0
 LIBS := xcb-atom
 
@@ -26,13 +27,16 @@ ifeq ($(VERBOSE), 0)
 	Q := @
 endif
 
+ifeq ($(DEBUG), 1)
+	CFLAGS += -g
+endif
+
 all: $(BUILD_DIR)/$(BIN)
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c config.h
 	$Qmkdir -p $(@D)
 	$(PRINTF) "CC" $@
 	$Q$(COMPILE.c) -o $@ $<
-
 
 $(BUILD_DIR)/$(BIN): $(OBJS)
 	$(PRINTF) "LD" $@

@@ -1,6 +1,5 @@
 #include "util.h"
 
-#include <stdio.h>
 #define UTF8_MULTIBYTE_BIT BIT(7)
 
 unsigned int gcd(unsigned int a, unsigned int b) {
@@ -25,7 +24,7 @@ size_t truncate_utf8_string(char* const buffer, const size_t size,
 
         unsigned short skip = 1;
 
-        // Multibyte unicode character
+        // Multibyte unicode character.
         if ((ch & UTF8_MULTIBYTE_BIT) != 0) {
             // Skip continuation bytes.
             ch <<= 1;

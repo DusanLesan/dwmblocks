@@ -1,9 +1,8 @@
 #include "block.h"
 
-#include <bits/stdint-uintn.h>
-#include <bits/types/FILE.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -141,19 +140,7 @@ int block_update(block *const block) {
         return 1;
     }
 
-    (void)strcpy(block->output, buffer);
+    (void)strncpy(block->output, buffer, LEN(buffer));
 
     return 0;
-}
-
-bool block_must_run(const block *const block, const unsigned int time) {
-    if (time == 0) {
-        return true;
-    }
-
-    if (block->interval == 0) {
-        return false;
-    }
-
-    return time % block->interval == 0;
 }
