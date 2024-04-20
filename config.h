@@ -18,6 +18,7 @@
 
 // Define blocks for the status feed as X(cmd, interval, signal).
 #define BLOCKS(X)         \
+	X("music", 0, 10) \
     X("cpubars", 2, 1)  \
     X("memory", 2, 2)   \
     X("internet", 5, 4) \
