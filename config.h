@@ -5,7 +5,7 @@
 #define DELIMITER " | "
 
 // Maximum number of Unicode characters that a block can output.
-#define MAX_BLOCK_OUTPUT_LENGTH 45
+#define MAX_BLOCK_OUTPUT_LENGTH 100
 
 // Control whether blocks are clickable.
 #define CLICKABLE_BLOCKS 1
@@ -18,11 +18,12 @@
 
 // Define blocks for the status feed as X(icon, cmd, interval, signal).
 #define BLOCKS(X) \
-	X(" ", "music", 0, 10) \
+	X(" ", "music", 2, 10) \
 	X(" ", "cpubars", 2, 1) \
 	X("", "memory", 2, 2) \
 	X("", "internet", 5, 4) \
 	X("", "volume", 0, 5) \
+	X("", "bluetooth", 120, 15) \
 	X("", "clock", 10, 6)
 
 #endif  // CONFIG_H
